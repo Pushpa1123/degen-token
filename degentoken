@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "hardhat/console.sol";
+
+contract degenToken is ERC20, Ownable {
+    event LipstickRedeemed(address indexed target, string lipstickType, uint256 tokensize);
+
+    mapping(string => uint256) public lipstickPrices;
+    mapping(address => string) public receiverSelectedLipsticks;
+
+    string[] public availableLipstickTypes;
+
+    constructor(address initialOwner) ERC20("degenToken", "DT") Ownable(initialOwner) {}
+
+    function mintTokens(address target, uint256 tokensize) public onlyOwner {
+        _mint(target, tokensize);
+    }
+
+    function burnTokens(uint256 tokensize) public {
+        require(tokensize > 0, "Tokensize to burn must be greater than zero");
+        require(balanceOf(msg.sender) >= tokensize, "Insufficient balance to burn");
+        _burn(msg.sender, tokensize);
+    }
+
+    function redeemLipstick(string memory lipstickType) public payable {
+        lipstickPrices["Glossy_Lipstick"] = 80;
+        lipstickPrices["Matte_Lipstick"] = 100;
+
+        require(lipstickPrices[lipstickType] > 0, "Invalid lipstick type");
+        require(balanceOf(msg.sender) >= lipstickPrices[lipstickType], "Insufficient balance to redeem lipstick");
+        _burn(msg.sender, lipstickPrices[lipstickType]);
+        receiverSelectedLipsticks[msg.sender] = lipstickType;
+        emit LipstickRedeemed(msg.sender, lipstickType, lipstickPrices[lipstickType]);
+    }
+
+    function transferTokens(address target, uint256 tokensize) external {
+        require(target != address(0), "Invalid target address");
+        require(balanceOf(msg.sender) >= tokensize, "Insufficient balance for transfer");
+        _transfer(msg.sender, target, tokensize);
+    }
+}
