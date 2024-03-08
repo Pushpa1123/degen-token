@@ -20,6 +20,7 @@ contract degenToken is ERC20, Ownable {
         _mint(target, tokensize);
     }
 
+
     function burnTokens(uint256 tokensize) public {
         require(tokensize > 0, "Tokensize to burn must be greater than zero");
         require(balanceOf(msg.sender) >= tokensize, "Insufficient balance to burn");
